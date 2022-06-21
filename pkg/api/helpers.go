@@ -6,9 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"fmt"
-
-	"github.com/QuentinPerez/go-encodeUrl"
+	encurl "github.com/QuentinPerez/go-encodeUrl"
 )
 
 // UsageConfig usage request
@@ -152,7 +150,7 @@ type UserConfig struct {
 	AccessKey   string `url:"access-key,ifStringIsNotEmpty"`   // Specify access key
 	SecretKey   string `url:"secret-key,ifStringIsNotEmpty"`   // Specify secret key
 	UserCaps    string `url:"user-caps,ifStringIsNotEmpty"`    // User capabilities
-	MaxBuckets  *int   `url:"max-buckets,itoaIfNotNil"`        // Specify the maximum number of buckets the user can own
+	MaxBuckets  *int   `url:"max-buckets,itoaIfNotNil"`        // Specify the maximum number of buckets the user can own. Setting the limit to -1 will disable creation of buckets
 	GenerateKey bool   `url:"generate-key,ifBoolIsTrue"`       // Generate a new key pair and add to the existing keyring
 	Suspended   bool   `url:"suspended,ifBoolIsTrue"`          // Specify whether the user should be suspended
 	PurgeData   bool   `url:"purge-data,ifBoolIsTrue"`         // When specified the buckets and objects belonging to the user will also be removed
@@ -647,8 +645,6 @@ func (api *API) LinkBucket(conf BucketConfig) error {
 		errs   []error
 	)
 
-	// FIXME doesn't work
-	return fmt.Errorf("LinkBucket not implemented yet")
 	if conf.Bucket == "" {
 		return errors.New("Bucket field is required")
 	}
