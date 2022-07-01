@@ -10,5 +10,6 @@ require (
 	github.com/smartystreets/go-aws-auth v0.0.0-20180515143844-0c1422d1fdb9
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a
 	github.com/smartystreets/gunit v0.0.0-20190426220047-d9c9211acd48 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	gopkg.in/ini.v1 v1.42.0 // indirect
 )

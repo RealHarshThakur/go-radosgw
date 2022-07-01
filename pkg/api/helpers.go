@@ -19,6 +19,42 @@ type UsageConfig struct {
 	RemoveAll   bool       `url:"remove-all,ifBoolIsTrue"`    // Required when uid is not specified, in order to acknowledge multi user data removal.
 }
 
+// BucketInfo contains info of the bucket
+type BucketInfo struct {
+	Bucket        string      `json:"bucket"`
+	NumShards     int         `json:"num_shards"`
+	Tenant        string      `json:"tenant"`
+	ZoneGroup     string      `json:"zonegroup"`
+	PlacementRule string      `json:"placement_rule"`
+	ID            string      `json:"id"`
+	Marker        string      `json:"marker"`
+	IndexType     string      `json:"index_type"`
+	Owner         string      `json:"owner"`
+	CreationTime  string      `json:"creation_time"`
+	Usage         RGWMain     `json:"usage"`
+	BucketQuota   BucketQuota `json:"bucket_quota"`
+}
+
+// BucketQuota contains quota info of the bucket
+type BucketQuota struct {
+	Enabled    bool  `json:"enabled"`
+	CheckOnRaw bool  `json:"check_on_raw"`
+	MaxSizeKB  int64 `json:"max_size_kb"`
+	MaxObjects int64 `json:"max_objects"`
+}
+
+// BucketUsage gets usage information for a bucket.
+type BucketUsage struct {
+	SizeKBUtilized int `json:"size_kb_utilized"`
+	SizeKBActual   int `json:"size_kb_actual"`
+	NumObjects     int `json:"num_objects"`
+}
+
+// RGWMain contains bucket usage
+type RGWMain struct {
+	BucketUsage BucketUsage `json:"rgw.main"`
+}
+
 // GetUsage requests bandwidth usage information.
 //
 // !! caps: usage=read !!
@@ -614,22 +650,32 @@ func (api *API) UnlinkBucket(conf BucketConfig) error {
 //@CheckObjects
 //@Fix
 //
-func (api *API) CheckBucket(conf BucketConfig) (string, error) {
+func (api *API) CheckBucket(conf BucketConfig) (*BucketInfo, error) {
 	var (
 		values = url.Values{}
 		errs   []error
 	)
 
 	if conf.Bucket == "" {
-		return "", errors.New("Bucket field is required")
+		return nil, errors.New("Bucket field is required")
 	}
 	values, errs = encurl.Translate(conf)
 	if len(errs) > 0 {
-		return "", errs[0]
+		return nil, errs[0]
 	}
 	values.Add("format", "json")
-	body, _, err := api.call("GET", "/bucket", values, true, "index")
-	return string(body), err
+	body, _, err := api.call("GET", "/bucket", values, true)
+	if err != nil {
+		return nil, err
+	}
+
+	bucketInfo := BucketInfo{}
+	err = json.Unmarshal(body, &bucketInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return &bucketInfo, err
 }
 
 // LinkBucket links a bucket to a specified user, unlinking the bucket from any previous user.
@@ -758,7 +804,7 @@ type QuotaConfig struct {
 	Bucket     string `url:"bucket,ifStringIsNotEmpty"`      // The bucket name
 	MaxObjects string `url:"max-objects,ifStringIsNotEmpty"` // The max-objects setting allows you to specify the maximum number of objects. A negative value disables this setting.
 	MaxSizeKB  string `url:"max-size-kb,ifStringIsNotEmpty"` // The max-size-kb option allows you to specify a quota for the maximum number of bytes. A negative value disables this setting
-	Enabled    string `url:"enabled,ifStringIsNotEmpty"`     // The enabled option enables the quotas
+	Enabled    string `url:"enabled,ifStringIsNotEmpty"`     // The enabled option enables the quotas.The value should be either ‘True’ or ‘False’.
 	QuotaType  string `url:"quota-type,ifStringIsNotEmpty"`  // The quota-type option sets the scope for the quota. The options are bucket and user.
 }
 
