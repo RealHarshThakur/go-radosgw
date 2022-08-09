@@ -280,6 +280,15 @@ func (api *API) UpdateUser(conf UserConfig) (*User, error) {
 	return ret, nil
 }
 
+func (api *API) UnsuspendUser(uid string) error {
+	values := url.Values{}
+	values.Add("format", "json")
+	values.Add("uid", uid)
+	values.Add("suspended", "False")
+	_, _, err := api.call("POST", "/user", values, true)
+	return err
+}
+
 // RemoveUser removes an existing user.
 //
 // !! caps: users=write !!

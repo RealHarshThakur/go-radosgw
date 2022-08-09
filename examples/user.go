@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	radosAPI "github.com/QuentinPerez/go-radosgw/pkg/api"
 )
@@ -26,6 +27,57 @@ func main() {
 	}
 
 	var user *radosAPI.User
+	if os.Args[1] == "set-bucket-quota" {
+		err = api.UpdateQuota(radosAPI.QuotaConfig{
+			// Bucket:    "johndoe2",
+			UID:       "JohnDoe",
+			MaxSizeKB: "1000",
+			QuotaType: "user",
+			Enabled:   "True",
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		quotas, err := api.GetQuotas(radosAPI.QuotaConfig{
+			// Bucket: "johndoe2",
+			UID: "JohnDoe",
+			// Enabled:   "True",
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+		printRawMode(os.Stdout, quotas)
+
+		// stats, err := api.CheckBucket(radosAPI.BucketConfig{
+		// 	Bucket: "johndoe2",
+		// 	Stats:  true,
+		// })
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// printRawMode(os.Stdout, stats)
+
+	}
+
+	if os.Args[1] == "suspend" {
+		err = api.UnsuspendUser("JohnDoe")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		user, err = api.GetUser("JohnDoe")
+		if err != nil {
+			log.Fatal(err)
+		}
+		printRawMode(os.Stdout, user)
+
+		// _, err = api.UpdateUser(radosAPI.UserConfig{
+		// 	UID:       "JohnDoe",
+		// })
+
+	}
+
 	if os.Args[1] == "create" {
 		// create a new user named JohnDoe
 		user, err = api.CreateUser(radosAPI.UserConfig{
@@ -34,6 +86,7 @@ func main() {
 			MaxBuckets:  intPtr(-1),
 		})
 		if err != nil {
+
 			log.Fatal(err)
 		}
 		printRawMode(os.Stdout, user)
@@ -43,6 +96,9 @@ func main() {
 		// get the user named JohnDoe
 		user, err = api.GetUser("JohnDoe")
 		if err != nil {
+			if strings.Contains(err.Error(), "404") {
+				fmt.Print("hello")
+			}
 			log.Fatal(err)
 		}
 		printRawMode(os.Stdout, user)
